@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/db-terraform.iml" filepath="$PROJECT_DIR$/.idea/db-terraform.iml" />
-      <module fileurl="file://$PROJECT_DIR$/output.tf/output.tf.iml" filepath="$PROJECT_DIR$/output.tf/output.tf.iml" />
     </modules>
   </component>
 </project>

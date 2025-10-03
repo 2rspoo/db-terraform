@@ -1,0 +1,29 @@
+name: 'Terraform Destroy Manual'
+
+on:
+  # Permite que este workflow seja acionado manualmente pela aba "Actions"
+  workflow_dispatch:
+
+jobs:
+  terraform-destroy:
+    name: 'Terraform Destroy'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::579375260812:role/GitHubActionRole-DatabaseInfra
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}"
