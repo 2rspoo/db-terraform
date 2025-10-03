@@ -61,7 +61,7 @@ resource "aws_security_group" "db_sg" {
 resource "aws_db_instance" "main_db" {
   allocated_storage    = 20
   engine               = "postgres"
-  engine_version       = "15.3"
+  engine_version       = "15.8"
   instance_class       = "db.t3.micro"
   username             = var.db_username
   password             = var.db_password // Vem do GitHub Secrets
