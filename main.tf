@@ -59,7 +59,7 @@ resource "aws_security_group" "db_sg" {
 
 # 5. Finalmente, cria a instância do banco de dados RDS
 resource "aws_db_instance" "main_db" {
-  allocated_storage    = 10
+  allocated_storage    = 20
   engine               = "postgres"
   engine_version       = "15.3"
   instance_class       = "db.t3.micro"
