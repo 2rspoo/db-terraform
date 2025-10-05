@@ -17,7 +17,6 @@
     terraform:
       name: 'Terraform Plan'
       # Condição: Só executa este job se o evento for um 'pull_request'
-      if: github.event_name == 'pull_request'
       runs-on: ubuntu-latest
 
       steps:
