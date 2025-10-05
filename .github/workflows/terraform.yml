@@ -25,7 +25,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::SUA_CONTA_AWS:role/GitHubAction-DatabaseInfra-Role # <-- SUBSTITUA PELO SEU ARN
+          role-to-assume: arn:aws:iam::579375260812:role/GitHubActionRole-DatabaseInfra # <-- SUBSTITUA PELO SEU ARN
           aws-region: us-east-1 # Substitua pela sua região
 
       - name: Setup Terraform
