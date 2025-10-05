@@ -9,19 +9,13 @@ permissions:
   contents: read
 # -------------------------
 
-<<<<<<< HEAD
-  jobs:
-    terraform:
-      name: 'Terraform'
-      # Condição: Só executa este job se o evento for um 'pull_request'
-      runs-on: ubuntu-latest
-=======
+
 jobs:
   terraform-destroy:
     name: 'Terraform Destroy'
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.destroy == 'true'
     runs-on: ubuntu-latest
->>>>>>> origin/feature7
+
 
     steps:
       - name: Checkout
