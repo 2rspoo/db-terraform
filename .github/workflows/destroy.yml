@@ -3,6 +3,12 @@ name: 'Terraform Destroy Manual 2'
 on:
   # Permite que este workflow seja acionado manualmente pela aba "Actions"
   workflow_dispatch:
+    inputs:
+      destroy:
+        description: 'Marque para destruir a infraestrutura. CUIDADO!'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   terraform-destroy:
