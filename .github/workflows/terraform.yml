@@ -1,67 +1,43 @@
-  name: 'Terraform CI/CD'
+name: 'Terraform Destroy Manual'
 
-  on:
-    push:
-      branches:
-        - main
-    pull_request:
-      branches:
-        - main
+on:
+  workflow_dispatch:
 
-  permissions:
-    id-token: write   # Necessário para autenticação OIDC
-    contents: read    # Necessário para fazer o checkout do código
-    pull-requests: write # Necessário para postar comentários no PR
+# --- ADICIONE ESTA SEÇÃO ---
+permissions:
+  id-token: write
+  contents: read
+# -------------------------
 
+<<<<<<< HEAD
   jobs:
     terraform:
       name: 'Terraform'
       # Condição: Só executa este job se o evento for um 'pull_request'
       runs-on: ubuntu-latest
+=======
+jobs:
+  terraform-destroy:
+    name: 'Terraform Destroy'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.destroy == 'true'
+    runs-on: ubuntu-latest
+>>>>>>> origin/feature7
 
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-        - name: Configure AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v3
-          with:
-            role-to-assume: arn:aws:iam::579375260812:role/GitHubActionRole-DatabaseInfra # <-- SUBSTITUA PELO SEU ARN
-            aws-region: us-east-1 # Substitua pela sua região
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::579375260812:role/GitHubActionRole-DatabaseInfra
+          aws-region: us-east-1
 
-        - name: Setup Terraform
-          uses: hashicorp/setup-terraform@v2
-          with:
-            terraform_wrapper: false
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
 
-        - name: Terraform Init
-          run: terraform init
+      - name: Terraform Init
+        run: terraform init
 
-        - name: Terraform Validate
-          run: terraform validate
-
-        - name: Terraform Plan
-          id: plan
-          # Roda 'plan' apenas para Pull Requests
-          if: github.event_name == 'pull_request'
-          run: terraform plan -no-color -input=false -var="db_password=${{ secrets.DB_PASSWORD }}"
-          continue-on-error: true # Continua mesmo se o plano falhar para que o comentário seja postado
-
-        - name: Update PR with Plan
-          # Publica o resultado do 'plan' como um comentário no PR
-          if: github.event_name == 'pull_request'
-          uses: actions/github-script@v6
-          with:
-            script: |
-              const output = `#### Terraform Plan 📖\`\`\`\n${{ steps.plan.outputs.stdout }}\n\`\`\``;
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: output
-              });
-
-        - name: Terraform Apply
-          # Roda 'apply' apenas em merges para a branch 'main'
-          if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-          run: terraform apply -auto-approve -input=false -var="db_password=${{ secrets.DB_PASSWORD }}"
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}"
