@@ -9,7 +9,6 @@ permissions:
   contents: read
 # -------------------------
 
-
 jobs:
   terraform-destroy:
     name: 'Terraform Destroy'
