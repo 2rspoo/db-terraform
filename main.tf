@@ -69,7 +69,7 @@ resource "aws_db_instance" "main_db" {
   db_subnet_group_name = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   skip_final_snapshot  = true
-  publicly_accessible  = false // Mantenha como 'false' em produção
+  publicly_accessible  = true // Mantenha como 'false' em produção
   provisioner "local-exec" {
     # Comando que será executado no worker do GitHub Actions
     # Ele usa o cliente 'psql' para rodar seu script SQL
