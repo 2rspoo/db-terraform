@@ -57,6 +57,8 @@ resource "aws_security_group" "db_sg" {
   }
 }
 
+
+
 # 5. Finalmente, cria a instância do banco de dados RDS
 resource "aws_db_instance" "main_db" {
   allocated_storage    = 15
@@ -69,7 +71,7 @@ resource "aws_db_instance" "main_db" {
   db_subnet_group_name = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   skip_final_snapshot  = true
-  publicly_accessible  = false // Mantenha como 'false' em produção
+  publicly_accessible  = true // Mantenha como 'false' em produção
   provisioner "local-exec" {
     # Comando que será executado no worker do GitHub Actions
     # Ele usa o cliente 'psql' para rodar seu script SQL
@@ -84,5 +86,42 @@ resource "aws_db_instance" "main_db" {
       PGDATABASE = self.db_name
     }
   }
+}
+
+# Adicione estes recursos ao seu código
+
+# 1. Cria o "portão" para a internet para sua VPC
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.db_vpc.id # Use o nome do seu recurso de VPC aqui
+
+  tags = {
+    Name = "main-igw"
+  }
+}
+
+# 2. Cria uma tabela de rotas que direciona o tráfego da internet
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.db_vpc.id
+
+  # Esta rota diz: "qualquer tráfego para fora (0.0.0.0/0) deve ir para o Internet Gateway"
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+
+  tags = {
+    Name = "public-route-table"
+  }
+}
+
+# 3. Associa esta nova tabela de rotas às suas subnets
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.db_subnet_a.id # Use o nome do seu recurso de subnet aqui
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table_association" "b" {
+  subnet_id      = aws_subnet.db_subnet_b.id # E aqui também, se você tiver mais de uma
+  route_table_id = aws_route_table.public_rt.id
 }
 
