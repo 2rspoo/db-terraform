@@ -83,5 +83,6 @@ resource "aws_db_instance" "main_db" {
       PGPASSWORD = self.password
       PGDATABASE = self.db_name
     }
+  }
 }
 
