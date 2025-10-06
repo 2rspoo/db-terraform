@@ -70,3 +70,15 @@ resource "aws_db_instance" "main_db" {
   skip_final_snapshot  = true
   publicly_accessible  = false // Mantenha como 'false' em produção
 }
+
+resource "sql_script" "inicializacao_db" {
+
+  # Aponta para o arquivo .sql que você criou
+  source = "${path.module}/schema.sql"
+
+  # Garante que este recurso só seja criado DEPOIS que a instância
+  # do banco de dados RDS estiver totalmente pronta.
+  depends_on = [
+    aws_db_instance.main_db
+  ]
+}
