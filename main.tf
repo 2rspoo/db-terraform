@@ -65,20 +65,23 @@ resource "aws_db_instance" "main_db" {
   instance_class       = "db.t3.micro"
   username             = var.db_username
   password             = var.db_password // Vem do GitHub Secrets
+  db_name  = "mydatabase" # Certifique-se de que o nome do banco está definido
   db_subnet_group_name = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   skip_final_snapshot  = true
   publicly_accessible  = false // Mantenha como 'false' em produção
+  provisioner "local-exec" {
+    # Comando que será executado no worker do GitHub Actions
+    # Ele usa o cliente 'psql' para rodar seu script SQL
+    command = "psql --quiet -f ${path.module}/schema.sql"
+
+    # Variáveis de ambiente para o 'psql' se conectar ao banco.
+    # O Terraform preenche os valores dinamicamente.
+    environment = {
+      PGHOST     = self.address
+      PGUSER     = self.username
+      PGPASSWORD = self.password
+      PGDATABASE = self.db_name
+    }
 }
 
-resource "sql_script" "inicializacao_db" {
-
-  # Aponta para o arquivo .sql que você criou
-  source = "${path.module}/schema.sql"
-
-  # Garante que este recurso só seja criado DEPOIS que a instância
-  # do banco de dados RDS estiver totalmente pronta.
-  depends_on = [
-    aws_db_instance.main_db
-  ]
-}
