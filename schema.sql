@@ -1,6 +1,69 @@
+-- Criação de tipos enumerados para garantir a consistência dos status.
+CREATE TYPE order_status AS ENUM ('RECEBIDO', 'EM_PREPARACAO', 'PRONTO', 'FINALIZADO', 'CANCELADO');
+CREATE TYPE payment_status AS ENUM ('PENDENTE', 'PAGO', 'RECUSADO');
+
+-- Tabela para as categorias dos produtos.
 CREATE TABLE category (
-  id BIGSERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL UNIQUE
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Tabela para os clientes.
+CREATE TABLE customer (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    -- Garante que o CPF contenha apenas 11 dígitos numéricos.
+    CONSTRAINT chk_cpf CHECK (cpf ~ '^[0-9]{11}$')
+);
+
+-- Tabela para os produtos.
+CREATE TABLE product (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price NUMERIC(10, 2) NOT NULL,
+    description TEXT,
+    image_url VARCHAR(255),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    category_id BIGINT NOT NULL,
+    -- Chave estrangeira que garante a integridade referencial com a tabela 'category'.
+    CONSTRAINT fk_product_category
+        FOREIGN KEY (category_id)
+        REFERENCES category (id)
+);
+
+-- Tabela para os pedidos.
+CREATE TABLE orders (
+    id BIGSERIAL PRIMARY KEY,
+    total_price NUMERIC(10, 2) NOT NULL,
+    status order_status NOT NULL DEFAULT 'RECEBIDO',
+    payment_status payment_status NOT NULL DEFAULT 'PENDENTE',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- Armazena data, hora e fuso horário.
+    customer_id BIGINT, -- Permite pedidos de clientes não identificados (pode ser nulo).
+    -- Chave estrangeira que garante a integridade referencial com a tabela 'customer'.
+    CONSTRAINT fk_order_customer
+        FOREIGN KEY (customer_id)
+        REFERENCES customer (id)
+);
+
+-- Tabela associativa para os itens de um pedido (solução para o problema da normalização).
+CREATE TABLE order_items (
+    id BIGSERIAL PRIMARY KEY,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    -- Armazena o preço do produto no momento da compra para manter a consistência histórica.
+    unit_price NUMERIC(10, 2) NOT NULL,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    -- Chaves estrangeiras.
+    CONSTRAINT fk_order_items_order
+        FOREIGN KEY (order_id)
+        REFERENCES orders (id) ON DELETE CASCADE, -- Se um pedido for deletado, seus itens também serão.
+    CONSTRAINT fk_order_items_product
+        FOREIGN KEY (product_id)
+        REFERENCES product (id) ON DELETE RESTRICT, -- Impede que um produto seja deletado se estiver em um pedido.
+    -- Garante que o mesmo produto não seja adicionado duas vezes no mesmo pedido.
+    UNIQUE (order_id, product_id)
 );
 
 INSERT INTO category (id, name) VALUES
@@ -9,18 +72,6 @@ INSERT INTO category (id, name) VALUES
   (3, 'Bebidas'),
   (4, 'Sobremesa')
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name; -- Isso ajuda a lidar com IDs já existentes
-
-
-CREATE TABLE product (
-  id BIGSERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-   price INTEGER NOT NULL,
-  category BIGINT NOT NULL, -- IDs das categorias: 1 (Lanche), 2 (Acompanhamento), 3 (Bebidas), 4 (Sobremesa)
-  description TEXT,
-  image VARCHAR(255),
-  active BOOLEAN NOT NULL DEFAULT TRUE
-);
-
 
 INSERT INTO product (name, price, category, description, image, active) VALUES
   ('Cheeseburger Clássico', 3500, 1, 'Hambúrguer de carne, queijo cheddar, alface, tomate e molho especial.', 'https://example.com/images/cheeseburger.jpg', TRUE),
@@ -49,15 +100,6 @@ INSERT INTO product (name, price, category, description, image, active) VALUES
   ('Pudim de Leite Condensado', 1600, 4, 'Fatia de pudim de leite condensado com calda de caramelo.', 'https://example.com/images/pudim.jpg', TRUE),
   ('Açaí Pequeno', 2000, 4, 'Creme de açaí puro com granola e banana.', 'https://example.com/images/acai.jpg', TRUE);
 
-
-CREATE TABLE customer (
-  id BIGSERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE, -- Email pode ser nulo, mas se preenchido, deve ser único
-  cpf BIGINT NOT NULL UNIQUE -- CPF é um campo obrigatório e deve ser único
-);
-
-
 INSERT INTO customer (name, email, cpf) VALUES
   ('João Silva', 'joao.silva@email.com', 12345678901),
   ('Maria Souza', 'maria.souza@email.com', 98765432109),
@@ -65,24 +107,6 @@ INSERT INTO customer (name, email, cpf) VALUES
   ('Ana Costa', 'ana.costa@email.com', 65432109876);
 
 
-
-CREATE TABLE "orderqueue" (
-  id BIGSERIAL PRIMARY KEY,
-  idcustomer BIGINT NOT NULL,
-  step VARCHAR(50) NOT NULL,
-  date DATE NOT NULL,
-  time TIME NOT NULL,
-  price INTEGER NOT NULL,
-  details TEXT,
-  CONSTRAINT fk_customer
-  FOREIGN KEY (idcustomer)
-  REFERENCES customer (id)
-);
-
-ALTER TABLE IF EXISTS public.orderqueue
-  ADD COLUMN payment_status character varying(255) COLLATE pg_catalog."default";
-
 INSERT INTO "orderqueue" (idcustomer, step, date, time, price, details) VALUES
   (1, 'RECEBIDO', '2025-06-04', '14:30:00', 7500, '1 Cheeseburger Clássico, 1 Batata Frita Grande, 1 Refrigerante Lata'),
   (2, 'RECEBIDO', '2025-06-04', '15:15:00', 4300, '1 Sanduíche Natural de Frango, 1 Suco Natural de Laranja, 1 Mousse de Maracujá');
-
