@@ -26,7 +26,7 @@
           uses: aws-actions/configure-aws-credentials@v3
           with:
             role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }} # <-- SUBSTITUA PELO SEU ARN
-            aws-region: ${{ secrets.AWS_REGION }}# Substitua pela sua região
+            aws-region: ${{ secrets.AWS_REGION }} # Substitua pela sua região
 
         - name: Setup Terraform
           uses: hashicorp/setup-terraform@v2
