@@ -1,13 +1,12 @@
-variable "db_password" {
-  description = "Senha para o banco de dados RDS"
+variable "db_username" {
+  description = "Usuário mestre do banco de dados"
   type        = string
-  sensitive   = true // Marca a variável como sensível para não ser exibida nos logs
 }
 
-variable "db_username" {
-  description = "Usuário master para o banco de dados"
+variable "db_password" {
+  description = "Senha mestre do banco de dados"
   type        = string
-  default     = "postgresadmin"
+  sensitive   = true # Oculta a senha nos logs do terminal
 }
 
 variable "postgres_services" {
