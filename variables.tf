@@ -1,6 +1,7 @@
 variable "db_username" {
   description = "Usuário mestre do banco de dados"
   type        = string
+  default     = "postgres_admin" # Se não for passado via secret, usará este
 }
 
 variable "db_password" {
