@@ -49,27 +49,25 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 
 # 4. Cria um Security Group para controlar o acesso
 resource "aws_security_group" "db_sg" {
-  name        = "db-security-group"
-  description = "Permite acesso na porta do PostgreSQL"
-  vpc_id      = aws_vpc.db_vpc.id
+  name   = "db-security-group"
+  vpc_id = aws_vpc.db_vpc.id
 
-  # Libera acesso de entrada na porta 5432 (PostgreSQL) a partir de qualquer IP
-  # ATENÇÃO: Em produção, restrinja o cidr_blocks para IPs conhecidos (ex: da sua aplicação)
   ingress {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # O GitHub Actions usará este caminho
   }
+  # ... (egress igual ao que você já tinha)
+}
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
 
 
 # 5. Finalmente, cria a instância do banco de dados RDS
@@ -79,9 +77,11 @@ resource "aws_db_instance" "postgres_db" {
   identifier           = "${each.key}-db"
   allocated_storage    = 15
   engine               = "postgres"
-  engine_version       = "15.8"
-  instance_class       = "db.t3.micro"
 
+  # Altere de "15.8" para "15"
+  engine_version       = "15"
+
+  instance_class       = "db.t3.micro"
   username             = var.db_username
   password             = var.db_password
   db_name              = each.value.db_name
@@ -90,11 +90,10 @@ resource "aws_db_instance" "postgres_db" {
   vpc_security_group_ids = [aws_security_group.db_sg.id]
 
   skip_final_snapshot  = true
-  publicly_accessible  = true # Lembre-se de mudar para false em produção
+  publicly_accessible  = true
 
-  # Opcional: Script SQL específico para cada serviço
   provisioner "local-exec" {
-    command = "psql --quiet -f ${path.module}/schemas/${each.key}.sql"
+    command = "sleep 60 && psql --quiet -f ${path.module}/schemas/${each.key}.sql"
     environment = {
       PGHOST     = self.address
       PGUSER     = self.username

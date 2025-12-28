@@ -67,4 +67,4 @@
         - name: Terraform Apply
           # Roda 'apply' apenas em merges para a branch 'main'
           if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-          run: terraform apply -auto-approve -input=false -var="db_password=${{ secrets.DB_PASSWORD }}"
+          run: terraform apply -auto-approve -input=false -var="db_password=${{ secrets.DB_PASSWORD }}" -var="db_username=${{ secrets.DB_USERNAME }}"
