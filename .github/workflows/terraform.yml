@@ -47,7 +47,7 @@
           id: plan
           # Roda 'plan' apenas para Pull Requests
           if: github.event_name == 'pull_request'
-          run: terraform plan -no-color -input=false -var="db_password=${{ secrets.DB_PASSWORD }}"
+          run: terraform plan -no-color -input=false -var="db_password=${{ secrets.DB_PASSWORD }}" -var="db_username=${{ secrets.DB_USERNAME }}"
           continue-on-error: true # Continua mesmo se o plano falhar para que o comentário seja postado
 
         - name: Update PR with Plan
