@@ -61,6 +61,7 @@ resource "aws_security_group" "db_sg" {
   # ... (egress igual ao que você já tinha)
 }
 
+
   egress {
     from_port = 0
     to_port   = 0
