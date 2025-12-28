@@ -9,3 +9,13 @@ variable "db_username" {
   type        = string
   default     = "postgresadmin"
 }
+
+variable "postgres_services" {
+  type = map(object({
+    db_name = string
+  }))
+  default = {
+    "clientes" = { db_name = "clientes_db" },
+    "produtos" = { db_name = "produtos_db" }
+  }
+}
