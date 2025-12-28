@@ -65,31 +65,50 @@ resource "aws_security_group" "db_sg" {
 
 
 # 5. Finalmente, cria a instância do banco de dados RDS
-resource "aws_db_instance" "main_db" {
+resource "aws_db_instance" "postgres_db" {
+  for_each = var.postgres_services
+
+  identifier           = "${each.key}-db"
   allocated_storage    = 15
   engine               = "postgres"
   engine_version       = "15.8"
   instance_class       = "db.t3.micro"
-  username             = var.db_username
-  password             = var.db_password // Vem do GitHub Secrets
-  db_name  = "mydatabase" # Certifique-se de que o nome do banco está definido
-  db_subnet_group_name = aws_db_subnet_group.db_subnet_group.name
-  vpc_security_group_ids = [aws_security_group.db_sg.id]
-  skip_final_snapshot  = true
-  publicly_accessible  = true // Mantenha como 'false' em produção
-  provisioner "local-exec" {
-    # Comando que será executado no worker do GitHub Actions
-    # Ele usa o cliente 'psql' para rodar seu script SQL
-    command = "psql --quiet -f ${path.module}/schema.sql"
 
-    # Variáveis de ambiente para o 'psql' se conectar ao banco.
-    # O Terraform preenche os valores dinamicamente.
+  username             = var.db_username
+  password             = var.db_password
+  db_name              = each.value.db_name
+
+  db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
+
+  skip_final_snapshot  = true
+  publicly_accessible  = true # Lembre-se de mudar para false em produção
+
+  # Opcional: Script SQL específico para cada serviço
+  provisioner "local-exec" {
+    command = "psql --quiet -f ${path.module}/schemas/${each.key}.sql"
     environment = {
       PGHOST     = self.address
       PGUSER     = self.username
       PGPASSWORD = self.password
       PGDATABASE = self.db_name
     }
+  }
+}
+
+resource "aws_dynamodb_table" "pedidos_db" {
+  name           = "Pedidos"
+  billing_mode   = "PAY_PER_REQUEST" # Paga apenas pelo que usar
+  hash_key       = "PedidoID"        # Chave de partição
+
+  attribute {
+    name = "PedidoID"
+    type = "S" # String
+  }
+
+  tags = {
+    Name        = "pedidos-service-db"
+    Environment = "production"
   }
 }
 
