@@ -31,12 +31,20 @@ resource "aws_subnet" "db_subnet_b" {
 }
 
 # 3. Agrupa as subnets para o RDS usar
+
 resource "aws_db_subnet_group" "db_subnet_group" {
-  name       = "main-db-subnet-group"
+  # Mude o nome de "main-db-subnet-group" para "microservices-db-subnet-group"
+  name       = "microservices-db-subnet-group"
   subnet_ids = [aws_subnet.db_subnet_a.id, aws_subnet.db_subnet_b.id]
+
   tags = {
-    Name = "Main DB Subnet Group"
+    Name = "Microservices DB Subnet Group"
   }
+  lifecycle {
+    create_before_destroy = true
+  }
+
+
 }
 
 # 4. Cria um Security Group para controlar o acesso
